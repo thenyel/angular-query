@@ -1,5 +1,7 @@
 #Angular-Query
-AngularQuery is a Model Factory that allows high level methods for server-side filtering, paging and sorting.
+`Status: Conception / Initial Prototype`  
+AngularQuery is a Model Factory that allows high level methods for server-side filtering, paging and sorting.  
+
 ##Getting Started
 - Clone the repo `git clone git@github.com:ducondez/angular-query.git` or just [download](https://github.com/ducondez/angular-query/archive/master.zip) to your angular resources folder
 - Inject the `ngQuery` module into your app
@@ -9,17 +11,17 @@ AngularQuery is a Model Factory that allows high level methods for server-side f
 var app = angular.module('ngQuery', ['ngQuery']);
 ```
 
-Take note that our master branch is our active, unstable development branch and that if you're looking to download a stable copy of the repo, check the [tagged downloads](https://github.com/maker/ratchet/tags).
+Take note that our master branch is our active, unstable development branch and there is **no stable version** yet.
 
 
 ##Usage
-###Creating a QueryModel
-The QueryModel accepts a [REST URL, ngResource or VModel(coming soon)] and returns an instance of the QueryModel. The instance has a property called `rows` which is an array containing the results of the query.
+###Creating an instance
+The QueryModel accepts 2 parameters. The `<source>` and `<options>` where the `<source>` can be any of the following:
 - URL link
 
 >
 ``` javascript
-var Cars = new QueryModel('http://mylink.com/cars');
+var cars = new QueryModel('http://mylink.com/cars');
 ```
 
 - $resource
@@ -27,17 +29,46 @@ var Cars = new QueryModel('http://mylink.com/cars');
 >
 ``` javascript
 var carsResource = $resource('http://mylink.com/cars');
-var Cars = new QueryModel(carsResource);
+var cars = new QueryModel(carsResource);
 ```
 
 - VModel (future: ngResource wrapper superset features)
+
+###Options
+
+>
+``` javascript
+// Example option
+var options = {afterFind: function() { ... } };
+var cars = new QueryModel('http://mylink.com/cars', options);
+```
+
+AngularQuery defines serveral options
+- `(after|before)Find` [function] - calls the before/afterFind function respectively after a successfull find query.
+- `(after|before)Sort` [function] - calls the before/afterSort function respectively after a successfull sort query.
+- `(after|before)PageMove` [function] - calls the before/afterPageMove function respectively after a successfull pagination query.
+- `instantiateRows` [boolean] - (default to `true`) intantiate a `$resource` or `VModel` object for every records returned by the query.
+
+###Results and promises
+Query Methods `find()`, `sort()`, and `next()` etc... returns a promise object. The resulting data from the queries are stored in the `data` propery of the AngularQuery instance.
+
+>
+``` javascript
+// keep the promise
+var carsPromise = cars.next();
+carsPromise.success(function() {
+  alert('Found a couple more cars!');
+});
+// check data
+console.log(cars.data); // [ {...}, {...}, ... ]
+```
 
 ###Filtering / Querying
 
 >
 ``` javascript
 // In the Controller
-var Cars = new QueryModel(carsResource);
+var cars = new QueryModel(carsResource);
 cars.find();
 ```
 
@@ -48,7 +79,7 @@ cars.find();
 <button ng-click="cars.find(carQuery)">Find</button>
 <!-- Cars List -->
 <ul>
-  <li ng-repeat="car in cars.rows">car.name</li>
+  <li ng-repeat="car in cars.data">car.name</li>
 </ul>
 ```
 
@@ -81,6 +112,7 @@ cars.find();
 
 
 ##Roadmap
+- Make it work
 - Features/Ideas
   - Resultset Model instatntiation (for $resource or VModel)
   - Flexible client-side caching
