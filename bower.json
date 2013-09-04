@@ -1,10 +1,21 @@
 {
   "name": "angular-query",
-  "version": "1.0.0",
   "main": "angular-query.js",
+  "version": "1.0.0",
+  "homepage": "https://github.com/ducondez/angular-query",
+  "description": "High level query provider",
+  "keywords": [
+    "angular",
+    "angular-query",
+    "query",
+    "pagination"
+  ],
+  "license": "MIT",
   "ignore": [
     "**/.*",
     "node_modules",
-    "components"
+    "bower_components",
+    "test",
+    "tests"
   ]
 }
