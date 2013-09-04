@@ -1,0 +1,16 @@
+{
+  "author": "Danniel Condez",
+  "name": "angular-query",
+  "description": "High level query provider",
+  "version": "0.1.0",
+  "homepage": "https://github.com/ducondez/angular-query",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/ducondez/angular-query.git"
+  },
+  "main": "./angular-query.js",
+  "dependencies": {
+    "jquery": ">= 1.8.0",
+    "angular": ">= 1.0.8"
+  }
+}
