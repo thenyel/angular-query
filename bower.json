@@ -1,0 +1,10 @@
+{
+  "name": "angular-query",
+  "version": "1.0.0",
+  "main": "angular-query.js",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "components"
+  ]
+}

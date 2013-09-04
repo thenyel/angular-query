@@ -1,20 +1,9 @@
-/**
- * @license AngularJS v1.0.7
- * (c) 2010-2012 Google, Inc. http://angularjs.org
- * License: MIT
- */
 (function(window, angular) {
 'use strict';
 
-/**
- * @ngdoc overview
- * @name ngResource
- * @description
- */
+angular.module('query', ['ng']).
 
-angular.module('ngQuery', ['ng']).
-
-  factory('$query', ['$http', function($http) {
+  factory('Query', ['$http', function($http) {
 
     var noop = angular.noop,
         forEach = angular.forEach,
@@ -23,46 +12,39 @@ angular.module('ngQuery', ['ng']).
         isFunction = angular.isFunction;
 
 
-    function QueryFactory(url, httpParams, config) {
-      var http = $http(url);
+      function Query(url, httpParams, config){
 
-      var defaultParams = httpParams ||
-        {
-          method: 'GET',
-          url: url,
-          params: {},
-          cache: true
-        };
+        var defaultParams = httpParams ||
+          {
+            method: 'GET',
+            url: url,
+            params: {},
+            cache: false
+          };
 
-      this.httpParams = extend({}, defaultParams, httpParams);
-      this.config = extend({}, config);
-      
-      
-      function Query(value){
-        copy(value || {}, this);
+        this.httpParams = extend({}, defaultParams, httpParams);
+        this.config = extend({}, config);
 
-        this.rows = [];
-
-        this.history = {};
-
+        this.data = [];
 
         /**
          * Filter properties
          */
-        this.filters
+        this.limit = this.config.limit||15;
+        this.filters = {};
 
         /**
          * Paging properties
          */
-        this.page = 0;
-        this.pages = 0;
+        this.page = 1;
+        this.pages = 1;
         this.count = 0;
 
         /**
          * Sorting properties
          */
-        this.sortProperty = '';
-        this.sortAsc = true;
+        this.sortBy = '';
+        this.sortAsc = false;
 
 
       }
@@ -72,19 +54,67 @@ angular.module('ngQuery', ['ng']).
        */
       Query.prototype.find = function (params) {
 
-        var self = this;
+        var self = this,
+            params = {limit: this.limit, page: this.page};
 
+        /**
+         * Query Filters/Conditions
+         */
+        if (!$.isEmptyObject(this.filters)) {
+          $.each(this.filters, function (prop, val) {
+            params['q_'+prop] = val;
+          });
+        }
+
+        /**
+         * Query Sorting
+         */
+        if (this.sortBy) {
+          params.sort = this.sortBy;
+          params.sortAsc = !!this.sortAsc ? '' : '-';
+        }
+
+        /**
+         * Build query-string
+         */
+        this.httpParams.data = {name: 'Ch'};
+        this.httpParams.url = this.httpParams.url.split('?')[0] + '?' + $.param(params);
+
+        /**
+         * Start Request
+         */
         $http(this.httpParams).then(function(response) {
+
               var data = response.data;
 
               if (data) {
-                self.rows = data;
+
+                /**
+                 * Instantiate record Models
+                 *  - if config:  {useModel: <Model>}
+                 */
+                if (self.config.useModel) {
+                  self.data = [];
+                  $.each(data.data, function (i, dt) {
+                    self.data.push(new self.config.useModel(dt));
+                  });
+
+                // Load basic collection
+                } else {
+                  self.data = data.data;
+                }
+
+                // Paging/count
+                self.count = data.count;
+                self.pages = Math.ceil(data.count / self.limit);
               }
 
-              // do extra callback
-              (self.success||noop)(value, response.headers);
+              /**
+               * Success Callback
+               */
+              (self.success||noop)(response)
 
-            }, self.error);
+          }, (self.error||noop));
 
       }
       
@@ -96,10 +126,10 @@ angular.module('ngQuery', ['ng']).
        * @return {array}           result set
        */
       Query.prototype.sort = function (prop, direction) {
-        this.sortProperty = prop || this.sortProperty;
-        this.sortAsc = typeof direction === 'undefined'
+        this.sortBy = prop || this.sortBy;
+        this.sortAsc = this.sortBy == prop
           ? !this.sortAsc
-          : direction === true || direction === 'asc';
+          : false;
 
         this.find();
       }
@@ -122,7 +152,7 @@ angular.module('ngQuery', ['ng']).
        * @return {array} Resultset
        */
       Query.prototype.next = function () {
-        this.movePage(this.page + 1;)
+        this.movePage(this.page + 1);
       }
       
       /**
@@ -130,14 +160,21 @@ angular.module('ngQuery', ['ng']).
        * @return {array} ResultSet
        */
       Query.prototype.prev = function () {
-        this.movePage(this.page - 1;)
+        this.movePage(this.page - 1);
+      }
+      
+      /**
+       * Returns a range of pages
+       */
+      Query.prototype.getPages = function () {
+        function range (a, b, step) {
+            var A= [];if(typeof a== 'number'){A[0]= a;step= step || 1;while(a+step<= b){A[A.length]= a+= step;}}else{var s= 'abcdefghijklmnopqrstuvwxyz';if(a=== a.toUpperCase()){b=b.toUpperCase();s= s.toUpperCase();}s= s.substring(s.indexOf(a), s.indexOf(b)+ 1);A= s.split('');        }return A;
+        }
+        return range(1, this.pages);
       }
 
       return Query;
 
-    }
-
-    return QueryFactory;
 
   }]);
 
